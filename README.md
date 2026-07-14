@@ -21,4 +21,4 @@ Al hacer clic en el botón de lanzamiento, el sistema genera dos números aleato
 SANTIAGO RENDON ALVIS
 
 ## Enlace publicado en Render
-[Pega aquí el enlace de tu proyecto en Render, por ejemplo: https://tu-proyecto.onrender.com]
+https://juego-dados-html.onrender.com/
