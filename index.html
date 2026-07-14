@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suerte en los Dados</title>
+<style>
+  /* ============ RESET Y BASE ============ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --cafe3: #451b24;
+    --cafe2: #6c3331;
+    --cafe: #9f573f;
+    --amarillo3: #d88b4e;
+    --amarillo2: #ffd261;
+    --amarillo: #ffe64b;
+  }
+
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    background:
+      radial-gradient(circle at 40% 0%, var(--cafe3) 0%, var(--cafe2) 45%, var(--cafe) 100%);
+    color: var(--cafe);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color:#9f573f62;
+  }
+
+  h1, h2, h3 { font-family: 'Trebuchet MS', 'Segoe UI', sans-serif; letter-spacing: 1px; }
+
+  /* Textura tipo fieltro de casino (sin imágenes externas) */
+  .mesa {
+    background-image:
+      radial-gradient(circle, rgba(245, 39, 39, 0.082) 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+
+  /* ============ ENCABEZADO ============ */
+  header {
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 18px 6%;
+    background: #9f573f;
+    border-bottom: 3px solid var(--cafe3);
+  }
+
+  .logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--amarillo2);
+    text-shadow: 0 0 12px rgba(245, 159, 11, 0.671);
+  }
+
+  .logo .dado-mini {
+    font-size: 1.6rem;
+    animation: girar 6s linear infinite;
+  }
+
+  @keyframes girar {
+    0%, 85% { transform: rotate(0deg); }
+    92% { transform: rotate(180deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 24px;
+  }
+
+  nav a {
+    color: var(--amarillo);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-family: 'Trebuchet MS', sans-serif;
+    padding-bottom: 4px;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.25s, color 0.25s;
+  }
+
+  nav a:hover, nav a:focus-visible {
+    color: var(--amarillo2);
+    border-color: var(--cafe);
+  }
+
+  /* ============ SECCIÓN PRINCIPAL / HERO ============ */
+  .hero {
+    text-align: center;
+    padding: 48px 6% 24px;
+  }
+
+  .hero h2 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    color: var(--cafe);
+  }
+
+  .hero .acento {
+    color: var(--amarillo3);
+  }
+
+  .hero p.subtitulo {
+    margin-top: 10px;
+    color: var(--cafe2);
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 1rem;
+  }
+
+  /* ============ INTERFAZ DEL JUEGO ============ */
+  .zona-juego {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    padding: 24px 6% 56px;
+  }
+
+  .mesa-juego {
+    width: min(560px, 100%);
+    background:#9f573f77;
+    border: 2px solid var(--cafe);
+    border-radius: 20px;
+    padding: 36px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .dados {
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* Dado dibujado con CSS: caja + grid de puntos (pips) */
+  .dado {
+    width: 84px;
+    height: 84px;
+    background: var(--cafe);
+    border-radius: 14px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    padding: 12px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.35), 0 10px 18px rgba(0,0,0,0.45);
+    transition: transform 0.15s ease;
+  }
+
+  .dado.rodando {
+    animation: sacudir 0.5s ease;
+  }
+
+  @keyframes sacudir {
+    0% { transform: rotate(0deg) translateY(0); }
+    25% { transform: rotate(-18deg) translateY(-6px); }
+    50% { transform: rotate(14deg) translateY(0); }
+    75% { transform: rotate(-8deg) translateY(-3px); }
+    100% { transform: rotate(0deg) translateY(0); }
+  }
+
+  .punto {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--amarillo);
+    align-self: center;
+    justify-self: center;
+    opacity: 0;
+  }
+
+  .punto.activo { opacity: 1; }
+
+  /* Posiciones de los 9 puntos de la cuadrícula 3x3 para cada valor 1-6 */
+  .p1 { grid-area: 1 / 1; } .p2 { grid-area: 1 / 3; }
+  .p3 { grid-area: 2 / 1; } .p4 { grid-area: 2 / 2; } .p5 { grid-area: 2 / 3; }
+  .p6 { grid-area: 3 / 1; } .p7 { grid-area: 3 / 3; }
+
+  #btn-lanzar {
+    background: linear-gradient(180deg, var(--amarillo3), var(--cafe));
+    color: var(--amarillo);
+    border: none;
+    padding: 14px 42px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: 'Trebuchet MS', sans-serif;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #b45309, 0 8px 16px rgba(0, 0, 0, 0.774);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+
+  #btn-lanzar:hover { transform: translateY(-2px); }
+
+  #btn-lanzar:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #B45309, 0 4px 8px rgba(0,0,0,0.4);
+  }
+
+  #btn-lanzar:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Marcador / resultado */
+  .marcador {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 16px;
+    text-align: center;
+    font-family: 'Trebuchet MS', sans-serif;
+  }
+
+  .marcador div {
+    min-width: 90px;
+  }
+
+  .marcador .valor {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--amarillo);
+  }
+
+  .marcador .etiqueta {
+    font-size: 0.99rem;
+    color: var(--cafe);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  #mensaje {
+    min-height: 30px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-align: center;
+    font-family: 'Trebuchet MS', sans-serif;
+  }
+
+  #mensaje.gano { color: var(--cafe); text-shadow: 0 0 10px rgba(245,158,11,0.7); }
+  #mensaje.intenta { color: var(--cafe); }
+
+  /* ============ PIE DE PÁGINA ============ */
+  footer {
+    background: rgba(0,0,0,0.35);
+    border-top: 3px solid var(--cafe);
+    padding: 22px 6%;
+    text-align: center;
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 0.85rem;
+    color: #C9B8E8;
+  }
+
+  footer strong { color: var(--amarillo3); }
+
+  @media (max-width: 480px) {
+    .dado { width: 68px; height: 68px; }
+    header { justify-content: center; text-align: center; }
+  }
+</style>
+</head>
+<body class="mesa">
+
+  <!-- ============ ENCABEZADO ============ -->
+  <header>
+    <div class="logo"><span class="dado-mini">🎲</span> JUEGO DE PARES</div>
+  </header>
+
+  <!-- ============ SECCIÓN PRINCIPAL ============ -->
+  <section class="hero">
+    <h2>Lanza los dados y <span class="acento">prueba tu suerte</span></h2>
+    <p class="subtitulo">Consigue pares para ganar. ¡La suerte está en tus manos!</p>
+  </section>
+
+  <!-- ============ INTERFAZ DEL JUEGO ============ -->
+  <main class="zona-juego" id="juego">
+    <div class="mesa-juego">
+
+      <div class="dados">
+        <!-- Dado 1: 9 puntos, se activan según el valor -->
+        <div class="dado" id="dado1">
+          <span class="punto p1" data-pos="1"></span>
+          <span class="punto p2" data-pos="2"></span>
+          <span class="punto p3" data-pos="3"></span>
+          <span class="punto p4" data-pos="4"></span>
+          <span class="punto p5" data-pos="5"></span>
+          <span class="punto p6" data-pos="6"></span>
+          <span class="punto p7" data-pos="7"></span>
+        </div>
+        <!-- Dado 2 -->
+        <div class="dado" id="dado2">
+          <span class="punto p1" data-pos="1"></span>
+          <span class="punto p2" data-pos="2"></span>
+          <span class="punto p3" data-pos="3"></span>
+          <span class="punto p4" data-pos="4"></span>
+          <span class="punto p5" data-pos="5"></span>
+          <span class="punto p6" data-pos="6"></span>
+          <span class="punto p7" data-pos="7"></span>
+        </div>
+      </div>
+
+      <button id="btn-lanzar">🎲 Lanzar Dados</button>
+
+      <p id="mensaje">Presiona el botón para comenzar a jugar.</p>
+
+      <div class="marcador" id="reglas">
+        <div>
+          <div class="valor" id="suma">--</div>
+          <div class="etiqueta">Suma</div>
+        </div>
+        <div>
+          <div class="valor" id="victorias">0</div>
+          <div class="etiqueta">Victorias</div>
+        </div>
+        <div>
+          <div class="valor" id="intentos">0</div>
+          <div class="etiqueta">Intentos</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ============ PIE DE PÁGINA ============ -->
+  <footer id="pie-pagina">
+    <p>Desarrollado por <strong>SANTIAGO RENDON ALVIS</strong> · Análisis y Desarrollo de Software</p>
+  </footer>
+
+<script>
+  // Mapa de puntos que se activan (según posición 1-7 de la cuadrícula 3x3) para cada valor de dado
+  const PATRONES = {
+    1: [4],
+    2: [1, 7],
+    3: [1, 4, 7],
+    4: [1, 2, 6, 7],
+    5: [1, 2, 4, 6, 7],
+    6: [1, 2, 3, 5, 6, 7]
+  };
+
+  const btnLanzar = document.getElementById('btn-lanzar');
+  const dado1 = document.getElementById('dado1');
+  const dado2 = document.getElementById('dado2');
+  const mensaje = document.getElementById('mensaje');
+  const sumaEl = document.getElementById('suma');
+  const victoriasEl = document.getElementById('victorias');
+  const intentosEl = document.getElementById('intentos');
+
+  let victorias = 0;
+  let intentos = 0;
+
+  // Pinta los puntos activos de un dado según el valor obtenido (1-6)
+  function pintarDado(dadoEl, valor) {
+    const activos = PATRONES[valor];
+    dadoEl.querySelectorAll('.punto').forEach(punto => {
+      const pos = Number(punto.dataset.pos);
+      punto.classList.toggle('activo', activos.includes(pos));
+    });
+  }
+
+  // Genera un número entero aleatorio entre 1 y 6
+  function tirarDado() {
+    return Math.floor(Math.random() * 6) + 1;
+  }
+
+  function lanzarDados() {
+    btnLanzar.disabled = true;
+    dado1.classList.add('rodando');
+    dado2.classList.add('rodando');
+    mensaje.textContent = 'Rodando...';
+    mensaje.className = '';
+
+    // Pequeña pausa para que se vea la animación antes de mostrar el resultado
+    setTimeout(() => {
+      const valor1 = tirarDado();
+      const valor2 = tirarDado();
+      const suma = valor1 + valor2;
+
+      pintarDado(dado1, valor1);
+      pintarDado(dado2, valor2);
+
+      dado1.classList.remove('rodando');
+      dado2.classList.remove('rodando');
+
+      sumaEl.textContent = suma;
+      intentos++;
+      intentosEl.textContent = intentos;
+
+      if (valor1 === valor2) {
+        victorias++;
+        victoriasEl.textContent = victorias;
+        mensaje.textContent = `¡Dobles de ${valor1}! Ganaste esta ronda 🏆`;
+        mensaje.className = 'gano';
+      } else {
+        mensaje.textContent = `Sacaste ${valor1} y ${valor2} (suma ${suma}). ¡Intenta de nuevo!`;
+        mensaje.className = 'intenta';
+      }
+
+      btnLanzar.disabled = false;
+    }, 500);
+  }
+
+  btnLanzar.addEventListener('click', lanzarDados);
+</script>
+
+</body>
+</html>
